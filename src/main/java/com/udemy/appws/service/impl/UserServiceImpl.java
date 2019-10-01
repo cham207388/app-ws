@@ -4,6 +4,7 @@ import com.udemy.appws.bean.UserResponse;
 import com.udemy.appws.entity.User;
 import com.udemy.appws.repository.UserRepository;
 import com.udemy.appws.service.UserService;
+import com.udemy.appws.util.Converter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,15 +12,21 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static com.udemy.appws.util.RandomString.randomString;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.udemy.appws.util.RandomString.randomString;
 
 @Service
 public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+    private static Converter<User, UserResponse> converter = (user -> {
+        UserResponse response = new UserResponse();
+        BeanUtils.copyProperties(user, response);
+        return response;
+    });
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
@@ -35,9 +42,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse findById(Long id) {
         User user = this.userRepository.findById(id).get();
-        UserResponse userResponse = new UserResponse();
-        BeanUtils.copyProperties(user, userResponse);
-        return userResponse;
+        return converter.convert(user);
     }
 
     @Override
@@ -46,12 +51,8 @@ public class UserServiceImpl implements UserService {
         Iterable<User> users = this.userRepository.findAll();
 
         users.forEach(user -> {
-            UserResponse userResponse = new UserResponse();
-            BeanUtils.copyProperties(user, userResponse);
-            responses.add(userResponse);
+            responses.add(converter.convert(user));
         });
-
-
         return responses;
     }
 
@@ -59,10 +60,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse saveUser(User user) {
         user.setUserID(randomString());
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-
-        UserResponse userResponse = new UserResponse();
-        BeanUtils.copyProperties(this.userRepository.save(user), userResponse);
-        return userResponse;
+        return converter.convert(user);
     }
 
     @Override
@@ -76,9 +74,7 @@ public class UserServiceImpl implements UserService {
         User user = this.userRepository.findAllByUserID(userID);
         if (user == null) throw new UsernameNotFoundException(userID);
 
-        UserResponse response = new UserResponse();
-        BeanUtils.copyProperties(user, response);
-        return response;
+        return converter.convert(user);
     }
 
     @Override
@@ -86,9 +82,7 @@ public class UserServiceImpl implements UserService {
         User user = this.userRepository.findAllByUsername(username);
         if (user == null) throw new UsernameNotFoundException(username);
 
-        UserResponse response = new UserResponse();
-        BeanUtils.copyProperties(user, response);
-        return response;
+        return converter.convert(user);
     }
 
     @Override
