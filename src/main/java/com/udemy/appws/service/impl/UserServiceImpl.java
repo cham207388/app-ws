@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse saveUser(User user) {
         user.setUserID(randomString());
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+
         UserResponse userResponse = new UserResponse();
         BeanUtils.copyProperties(this.userRepository.save(user), userResponse);
         return userResponse;
@@ -74,6 +75,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse findByUserID(String userID) {
         User user = this.userRepository.findAllByUserID(userID);
         if (user == null) throw new UsernameNotFoundException(userID);
+
         UserResponse response = new UserResponse();
         BeanUtils.copyProperties(user, response);
         return response;
@@ -83,6 +85,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse findByUsername(String username) {
         User user = this.userRepository.findAllByUsername(username);
         if (user == null) throw new UsernameNotFoundException(username);
+
         UserResponse response = new UserResponse();
         BeanUtils.copyProperties(user, response);
         return response;
