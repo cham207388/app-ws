@@ -7,15 +7,13 @@ import com.udemy.appws.bean.UserResponse;
 import com.udemy.appws.service.UserService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import static com.udemy.appws.util.SecurityConstant.*;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -25,9 +23,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
+import static com.udemy.appws.util.SecurityConstant.*;
 
+@Slf4j
+public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
 
@@ -40,7 +39,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest req,
                                                 HttpServletResponse res) throws
             AuthenticationException {
-        LOGGER.info("attemptAuthentication invoked");
+        log.info("attemptAuthentication invoked");
         try {
             UserLogin creds = new ObjectMapper()
                     .readValue(req.getInputStream(), UserLogin.class);
@@ -60,19 +59,19 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                                             HttpServletResponse res,
                                             FilterChain chain, Authentication auth) throws
             IOException, ServletException {
-        LOGGER.info("successfulAuthentication invoked");
+        log.info("successfulAuthentication invoked");
         String userName = ((User) auth.getPrincipal()).getUsername();
 
         String token = Jwts.builder()
                 .setSubject(userName)
-                .setExpiration(new Date(System.currentTimeMillis() + ONE_DAY))
+                .setExpiration(new Date(System.currentTimeMillis() + getTokenExpiration()))
                 .signWith(SignatureAlgorithm.HS512, getTokenSecret())
                 .compact();
         UserService userService = (UserService) SpringApplicationContext.getBean("userServiceImpl");
         UserResponse response = userService.findByUsername(userName);
 
 
-        res.addHeader(getHeaderName(), TOKEN_PREFIX + token);
+        res.addHeader(getHeaderName(), getTokenPrefix() + token);
         res.addHeader("userID", userService.findByUsername(userName).getUserID());
     }
 }

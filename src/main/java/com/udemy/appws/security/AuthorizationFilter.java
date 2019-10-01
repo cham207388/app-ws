@@ -1,9 +1,5 @@
 package com.udemy.appws.security;
 
-import static com.udemy.appws.util.SecurityConstant.TOKEN_PREFIX;
-import static com.udemy.appws.util.SecurityConstant.getHeaderName;
-import static com.udemy.appws.util.SecurityConstant.getTokenSecret;
-
 
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.udemy.appws.util.SecurityConstant.*;
+
 
 public class AuthorizationFilter extends BasicAuthenticationFilter {
     public AuthorizationFilter(AuthenticationManager authenticationManager) {
@@ -29,7 +27,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
                                     HttpServletResponse res,
                                     FilterChain chain) throws IOException, ServletException {
         String header = req.getHeader(getHeaderName());
-        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
+        if (header == null || !header.startsWith(getTokenPrefix())) {
             chain.doFilter(req, res);
             return;
         }
@@ -42,7 +40,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest req) {
         String token = req.getHeader(getHeaderName());
         if (token != null) {
-            token = token.substring(TOKEN_PREFIX.length());
+            token = token.substring(getTokenPrefix().length());
             String user = Jwts.parser()
                     .setSigningKey(getTokenSecret())
                     .parseClaimsJws(token)
