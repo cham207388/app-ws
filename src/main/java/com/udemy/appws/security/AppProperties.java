@@ -18,4 +18,12 @@ public class AppProperties {
     public String getHeaderName(){
         return env.getProperty("headerName");
     }
+
+    public String getTokenPrefix() {
+        return env.getProperty("token.prefix");
+    }
+
+    public String getTokenExpiration() {
+        return env.getProperty("token.expiration");
+    }
 }
